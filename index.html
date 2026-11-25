@@ -1,0 +1,420 @@
+<!-- https://ram133.github.io/ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech Wikipedia — Command Console</title>
+  <style>
+    :root {
+      --bg: #0b1017;
+      --panel: #131b26;
+      --panel-2: #192433;
+      --text: #e6edf5;
+      --muted: #93a4b8;
+      --accent: #38bdf8;
+      --accent-2: #22c55e;
+      --danger: #ef4444;
+      --border: #263549;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+    h1 { margin: 0 0 6px; font-size: 1.6rem; }
+    .sub { color: var(--muted); margin: 0 0 20px; font-size: 0.95rem; }
+    .cmd-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    input, textarea, select, button {
+      font: inherit;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      padding: 10px 12px;
+    }
+    input.cmd-input { flex: 1 1 280px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: #061018;
+      font-weight: 600;
+      border: none;
+    }
+    button.secondary {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    button.danger {
+      background: var(--danger);
+      color: #fff;
+    }
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .chip {
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: var(--panel-2);
+      color: var(--accent);
+      border: 1px solid var(--border);
+    }
+    .box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+    .output {
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.9rem;
+      color: var(--accent-2);
+      margin-top: 10px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    textarea { width: 100%; min-height: 110px; margin-top: 10px; }
+    .article {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .article-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .slug {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--accent);
+      font-size: 0.85rem;
+    }
+    .meta { color: var(--muted); font-size: 0.8rem; margin-top: 6px; }
+    footer {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+    }
+    a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Tech Wikipedia</h1>
+    <p class="sub">Run <code>/find</code> (or <code>/wiki</code>), <code>/add</code>, <code>/edit</code>, and <code>/erase</code> commands directly in your browser.</p>
+
+    <form class="cmd-bar" id="cmdForm">
+      <input
+        id="cmdInput"
+        class="cmd-input"
+        type="text"
+        placeholder="/find cloudflare workers  |  /add slug | Title | Body  |  /edit slug | New Title | New Body  |  /erase slug"
+        autocomplete="off"
+      />
+      <button type="submit">Run</button>
+      <button type="button" class="secondary" id="resetSeedBtn">Reset Sample Docs</button>
+    </form>
+
+    <div class="chips">
+      <button type="button" class="chip" data-fill="/find workers">/find workers</button>
+      <button type="button" class="chip" data-fill="/wiki gcef">/wiki gcef</button>
+      <button type="button" class="chip" data-fill="/add pwa | Progressive Web App | Single-file offline-capable web app.">/add</button>
+      <button type="button" class="chip" data-fill="/edit workers | Cloudflare Workers | Edge JavaScript/TypeScript runtime with cron triggers.">/edit</button>
+      <button type="button" class="chip" data-fill="/erase pwa">/erase pwa</button>
+    </div>
+
+    <div class="box">
+      <strong>Command Output</strong>
+      <div id="cmdOutput" class="output">Ready. Enter a slash command above or use the form below.</div>
+
+      <div class="grid-2">
+        <input id="slugInput" type="text" placeholder="Slug (e.g. workers)" />
+        <input id="titleInput" type="text" placeholder="Article Title" />
+      </div>
+      <textarea id="bodyInput" placeholder="Article body text..."></textarea>
+      <div class="cmd-bar" style="margin-top: 10px; margin-bottom: 0;">
+        <button type="button" id="btnFind">/find</button>
+        <button type="button" id="btnAdd">/add</button>
+        <button type="button" class="secondary" id="btnEdit">/edit</button>
+        <button type="button" class="danger" id="btnErase">/erase</button>
+      </div>
+    </div>
+
+    <div id="articlesList"></div>
+
+    <footer>
+      <span>Clifford Ray Hackett</span>
+      <span>crh2509@icloud.com</span>
+      <span>671-IKNOWME</span>
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "tech_wikipedia_docs_v1";
+
+    const SEED_DOCS = [
+      {
+        slug: "workers",
+        title: "Cloudflare Workers",
+        body: "Serverless edge compute running HTTP handlers, webhooks, and scheduled cron jobs.",
+        updated: new Date().toISOString().slice(0, 10)
+      },
+      {
+        slug: "gcef",
+        title: "GCC Electronic Forum (GCEF)",
+        body: "Early online community forum at Guam Community College co-created with Chris Zagar.",
+        updated: new Date().toISOString().slice(0, 10)
+      }
+    ];
+
+    function loadDocs() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_DOCS));
+          return [...SEED_DOCS];
+        }
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [...SEED_DOCS];
+      } catch {
+        return [...SEED_DOCS];
+      }
+    }
+
+    function saveDocs(docs) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
+    }
+
+    function setOutput(msg) {
+      document.getElementById("cmdOutput").textContent = msg;
+    }
+
+    function renderArticles(list) {
+      const container = document.getElementById("articlesList");
+      if (!list.length) {
+        container.innerHTML = '<div class="box">No matching Tech Wiki entries.</div>';
+        return;
+      }
+      container.innerHTML = list.map((doc) => `
+        <article class="article">
+          <div class="article-top">
+            <strong>${escapeHtml(doc.title)}</strong>
+            <span class="slug">/${escapeHtml(doc.slug)}</span>
+          </div>
+          <p style="margin: 8px 0 0;">${escapeHtml(doc.body)}</p>
+          <div class="meta">Updated: ${escapeHtml(doc.updated)}</div>
+        </article>
+      `).join("");
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function normalizeSlug(raw) {
+      return String(raw || "")
+        .trim()
+        .toLowerCase()
+        .replace(/^\/+/, "")
+        .replace(/[^a-z0-9-_]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function cmdFind(query) {
+      const docs = loadDocs();
+      const q = String(query || "").trim().toLowerCase();
+      if (!q) {
+        renderArticles(docs);
+        setOutput(`/find -> Showing all ${docs.length} Tech Wiki entries.`);
+        return;
+      }
+      const matches = docs.filter((d) =>
+        d.slug.toLowerCase().includes(q) ||
+        d.title.toLowerCase().includes(q) ||
+        d.body.toLowerCase().includes(q)
+      );
+      renderArticles(matches);
+      setOutput(
+        matches.length
+          ? `/find "${query}" -> Found ${matches.length} entry(ies).`
+          : `/find "${query}" -> No matching entry found in Tech Wikipedia.`
+      );
+    }
+
+    function cmdAdd(slugRaw, titleRaw, bodyRaw) {
+      const slug = normalizeSlug(slugRaw);
+      const title = String(titleRaw || "").trim();
+      const body = String(bodyRaw || "").trim();
+      if (!slug || !title || !body) {
+        setOutput('/add requires slug, title, and body. Example: /add pwa | PWA | Offline web app.');
+        return;
+      }
+      const docs = loadDocs();
+      if (docs.some((d) => d.slug === slug)) {
+        setOutput(`/add failed -> Entry "/${slug}" already exists. Use /edit ${slug} to update it.`);
+        return;
+      }
+      const entry = {
+        slug,
+        title,
+        body,
+        updated: new Date().toISOString().slice(0, 10)
+      };
+      docs.unshift(entry);
+      saveDocs(docs);
+      renderArticles(docs);
+      setOutput(`/add -> Added "/${slug}" (${title}) to Tech Wikipedia.`);
+    }
+
+    function cmdEdit(slugRaw, titleRaw, bodyRaw) {
+      const slug = normalizeSlug(slugRaw);
+      const title = String(titleRaw || "").trim();
+      const body = String(bodyRaw || "").trim();
+      if (!slug || (!title && !body)) {
+        setOutput('/edit requires slug and updated title or body. Example: /edit workers | Workers | Edge runtime.');
+        return;
+      }
+      const docs = loadDocs();
+      const idx = docs.findIndex((d) => d.slug === slug);
+      if (idx === -1) {
+        setOutput(`/edit failed -> Entry "/${slug}" not found.`);
+        return;
+      }
+      if (title) docs[idx].title = title;
+      if (body) docs[idx].body = body;
+      docs[idx].updated = new Date().toISOString().slice(0, 10);
+      saveDocs(docs);
+      renderArticles(docs);
+      setOutput(`/edit -> Updated "/${slug}".`);
+    }
+
+    function cmdErase(slugRaw) {
+      const slug = normalizeSlug(slugRaw);
+      if (!slug) {
+        setOutput("/erase requires a slug. Example: /erase pwa");
+        return;
+      }
+      const docs = loadDocs();
+      const next = docs.filter((d) => d.slug !== slug);
+      if (next.length === docs.length) {
+        setOutput(`/erase failed -> Entry "/${slug}" not found.`);
+        return;
+      }
+      saveDocs(next);
+      renderArticles(next);
+      setOutput(`/erase -> Erased "/${slug}" from Tech Wikipedia.`);
+    }
+
+    function parseAndRun(inputText) {
+      const trimmed = String(inputText || "").trim();
+      if (!trimmed) return;
+      const parts = trimmed.split(/\s+/);
+      const head = parts[0].toLowerCase();
+      const rest = trimmed.slice(parts[0].length).trim();
+
+      if (head === "/find" || head === "/wiki") {
+        cmdFind(rest);
+        return;
+      }
+      if (head === "/add") {
+        const [s, t, b] = rest.split("|");
+        cmdAdd(s, t, b);
+        return;
+      }
+      if (head === "/edit") {
+        const [s, t, b] = rest.split("|");
+        cmdEdit(s, t, b);
+        return;
+      }
+      if (head === "/erase") {
+        const [s] = rest.split("|");
+        cmdErase(s);
+        return;
+      }
+      setOutput(`Unknown command "${head}". Use /find, /wiki, /add, /edit, or /erase.`);
+    }
+
+    document.getElementById("cmdForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      parseAndRun(document.getElementById("cmdInput").value);
+    });
+
+    document.querySelectorAll(".chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const val = btn.getAttribute("data-fill") || "";
+        document.getElementById("cmdInput").value = val;
+        parseAndRun(val);
+      });
+    });
+
+    document.getElementById("btnFind").addEventListener("click", () => {
+      cmdFind(document.getElementById("slugInput").value || document.getElementById("titleInput").value);
+    });
+
+    document.getElementById("btnAdd").addEventListener("click", () => {
+      cmdAdd(
+        document.getElementById("slugInput").value,
+        document.getElementById("titleInput").value,
+        document.getElementById("bodyInput").value
+      );
+    });
+
+    document.getElementById("btnEdit").addEventListener("click", () => {
+      cmdEdit(
+        document.getElementById("slugInput").value,
+        document.getElementById("titleInput").value,
+        document.getElementById("bodyInput").value
+      );
+    });
+
+    document.getElementById("btnErase").addEventListener("click", () => {
+      cmdErase(document.getElementById("slugInput").value);
+    });
+
+    document.getElementById("resetSeedBtn").addEventListener("click", () => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_DOCS));
+      renderArticles(SEED_DOCS);
+      setOutput("Reset Tech Wikipedia entries to default sample docs.");
+    });
+
+    renderArticles(loadDocs());
+  </script>
+</body>
+</html>
